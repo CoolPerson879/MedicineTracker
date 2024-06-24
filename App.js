@@ -88,6 +88,31 @@ const App = () => {
             ),
           }}
         />
+
+        <Tab.Screen
+          name="Form"
+          component={FormScreen}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <Plus
+                style={{
+                  width: 25,
+                  height: 25,
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: [{ translateX: -12.5 }, { translateY: -12.5 }],
+                  color: focused ? "#7F5DF0" : "#000000",
+                }}
+              />
+            ),
+            tabBarButton: (props) => (
+              <CustomTabBarButton {...props}>
+                <Plus size={40} color="white" />
+              </CustomTabBarButton>
+            ),
+          }}
+        />
         <Tab.Screen
           name="Data"
           component={DataScreen}
@@ -115,31 +140,7 @@ const App = () => {
             ),
           }}
         />
-        <Tab.Screen
-          name="Form"
-          component={FormScreen}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <Plus
-                style={{
-                  width: 25,
-                  height: 25,
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: [{ translateX: -12.5 }, { translateY: -12.5 }],
-                  color: focused ? "#7F5DF0" : "#000000",
-                }}
-              />
-            ),
-            tabBarButton: (props) => (
-              <CustomTabBarButton {...props}>
-                <Plus size={40} color="white" />
-              </CustomTabBarButton>
-            ),
-          }}
-        />
-        <Tab.Screen
+        {/* <Tab.Screen
           name="Analytics"
           component={GraphScreen}
           options={{
@@ -190,7 +191,7 @@ const App = () => {
               </View>
             ),
           }}
-        />
+        /> */}
       </Tab.Navigator>
     </NavigationContainer>
   );

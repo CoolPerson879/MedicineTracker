@@ -10,13 +10,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Dimensions, // Import Dimensions from react-native
+  Dimensions,
 } from "react-native";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import RNPickerSelect from "react-native-picker-select";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { CheckBox } from "react-native-elements";
 
 const phoneRegExp =
   /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
@@ -30,11 +31,17 @@ const FormSchema = Yup.object().shape({
   extrafieldtwo: Yup.string().matches(phoneRegExp, "Phone number is not valid"),
 });
 
+// Simple ID generator
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2, 15);
+};
+
 const FormScreen = ({ navigation }) => {
   const handleSubmit = async (values, { resetForm }) => {
     try {
       const existingData = await AsyncStorage.getItem("formData");
       const formData = existingData ? JSON.parse(existingData) : [];
+      values.id = generateId(); // Add a unique ID to each form entry
       formData.push(values);
       await AsyncStorage.setItem("formData", JSON.stringify(formData));
       resetForm();
@@ -49,6 +56,8 @@ const FormScreen = ({ navigation }) => {
   const toggleExpanded = () => {
     setExpanded(!expanded);
   };
+
+  const [isChecked, setIsChecked] = useState(false);
 
   // Get the height of the tab bar dynamically
   const tabBarHeight = Platform.OS === "ios" ? 50 : 60; // Adjust as per your tab bar height
@@ -154,7 +163,7 @@ const FormScreen = ({ navigation }) => {
                   <Text style={styles.error}>{errors.location}</Text>
                 ) : null}
 
-                <Text style={styles.label}>Additional Details</Text>
+                <Text style={styles.label}>Description</Text>
                 <TextInput
                   style={[styles.input, { minHeight: 40, height: "auto" }]}
                   onChangeText={handleChange("extra")}
@@ -162,10 +171,11 @@ const FormScreen = ({ navigation }) => {
                   value={values.extra}
                   multiline={true}
                 />
+
                 <View style={styles.dateTimeContainer}>
                   <View style={styles.dateTimeInput}>
                     <Text style={styles.label}>
-                      Date <Text style={{ color: "red" }}>*</Text>
+                      Start Date <Text style={{ color: "red" }}>*</Text>
                     </Text>
                     <DateTimePicker
                       value={values.date}
@@ -176,17 +186,30 @@ const FormScreen = ({ navigation }) => {
                       }}
                     />
                   </View>
-                  <View style={styles.dateTimeInput}>
-                    <Text style={styles.label}>Time</Text>
-                    <DateTimePicker
-                      value={values.time}
-                      mode="time"
-                      display="default"
-                      onChange={(event, selectedDate) => {
-                        setFieldValue("time", selectedDate);
-                      }}
-                    />
-                  </View>
+                  {isChecked === false && (
+                    <>
+                      <View style={styles.dateTimeInput}>
+                        <Text style={styles.label}>End Date</Text>
+                        <DateTimePicker
+                          value={values.time}
+                          mode="date"
+                          display="default"
+                          onChange={(event, selectedDate) => {
+                            setFieldValue("time", selectedDate);
+                          }}
+                        />
+                      </View>
+                    </>
+                  )}
+                </View>
+                {/* Checkbox */}
+                <View style={styles.checkboxContainer}>
+                  <CheckBox
+                    checked={isChecked}
+                    onPress={() => setIsChecked(!isChecked)}
+                    containerStyle={styles.checkbox}
+                  />
+                  <Text style={styles.checkboxLabel}>In progress</Text>
                 </View>
                 <Button
                   onPress={toggleExpanded}
@@ -236,7 +259,6 @@ const FormScreen = ({ navigation }) => {
     </TouchableWithoutFeedback>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -290,12 +312,24 @@ const styles = StyleSheet.create({
   },
   dateTimeContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 15,
   },
   dateTimeInput: {
     flex: 1,
-    marginRight: 10,
+    alignItems: "flex-start", // Align items to the left
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  checkbox: {
+    padding: 0,
+    margin: 0,
+  },
+  checkboxLabel: {
+    marginLeft: 10,
   },
 });
 

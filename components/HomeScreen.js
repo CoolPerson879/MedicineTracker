@@ -86,10 +86,6 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.greeting}>Hello</Text>
             <View style={styles.row}>{data.map(renderItem)}</View>
           </View>
-          <Button
-            title="Go to Form"
-            onPress={() => navigation.navigate("Form")}
-          />
         </View>
       </LinearGradient>
     </View>

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TextInput,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
@@ -16,6 +17,8 @@ import {
   Beaker,
   Globe,
   Trash,
+  Edit2,
+  Save,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -32,6 +35,8 @@ const categories = [
 const DataScreen = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState("Clinical");
   const [data, setData] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editedValues, setEditedValues] = useState({});
 
   const fetchData = async (category) => {
     try {
@@ -60,22 +65,64 @@ const DataScreen = ({ navigation }) => {
     fetchData(selectedCategory);
   }, [selectedCategory]);
 
-  const handleDelete = async (index) => {
+  const handleDelete = async (id) => {
     try {
-      const updatedData = data.filter((_, i) => i !== index);
+      const updatedData = data.filter((item) => item.id !== id);
       setData(updatedData);
-      await AsyncStorage.setItem("formData", JSON.stringify(updatedData));
+      const existingData = await AsyncStorage.getItem("formData");
+      const formData = existingData ? JSON.parse(existingData) : [];
+      const newFormData = formData.filter((item) => item.id !== id);
+      await AsyncStorage.setItem("formData", JSON.stringify(newFormData));
     } catch (error) {
       console.error("Error deleting data", error);
     }
   };
 
-  const renderDataItem = (label, value) => {
-    if (!value) return null;
+  const handleEdit = (id) => {
+    setEditingId(id);
+    const itemToEdit = data.find((item) => item.id === id);
+    setEditedValues({
+      name: itemToEdit.name,
+      number: itemToEdit.number,
+      email: itemToEdit.email,
+    });
+  };
+
+  const handleSave = async (id) => {
+    try {
+      const updatedData = data.map((item) =>
+        item.id === id ? { ...item, ...editedValues } : item
+      );
+      setData(updatedData);
+      await AsyncStorage.setItem("formData", JSON.stringify(updatedData));
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error saving data", error);
+    }
+  };
+
+  const handleChange = (field, value) => {
+    setEditedValues((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const renderDataItem = (label, value, editable, field) => {
+    if (!value && !editable) return null;
+
     return (
       <View style={styles.dataItem}>
         <Text style={styles.label}>{label}:</Text>
-        <Text style={styles.value}>{value}</Text>
+        {editable ? (
+          <TextInput
+            style={styles.input}
+            value={editedValues[field]}
+            onChangeText={(text) => handleChange(field, text)}
+          />
+        ) : (
+          <Text style={styles.value}>{value}</Text>
+        )}
       </View>
     );
   };
@@ -101,24 +148,54 @@ const DataScreen = ({ navigation }) => {
           </View>
 
           {data.map((item, index) => (
-            <View key={index} style={styles.card}>
+            <View key={item.id} style={styles.card}>
               <View style={styles.dataContainer}>
-                {renderDataItem("Name", item.name)}
-                {renderDataItem("Number", item.number)}
+                {renderDataItem(
+                  "Name",
+                  item.name,
+                  editingId === item.id,
+                  "name"
+                )}
+                {renderDataItem(
+                  "Number",
+                  item.number,
+                  editingId === item.id,
+                  "number"
+                )}
                 {renderDataItem(
                   "Date",
                   new Date(item.date).toLocaleDateString()
                 )}
               </View>
               <View style={styles.dataContainer}>
-                {renderDataItem("Email", item.email)}
+                {renderDataItem(
+                  "Email",
+                  item.email,
+                  editingId === item.id,
+                  "email"
+                )}
                 {renderDataItem("Extra", item.extra)}
                 {renderDataItem("Extra", item.extrafieldone)}
               </View>
               <View style={styles.cardActions}>
+                {/* {editingId === item.id ? (
+                  <TouchableOpacity
+                    style={styles.saveButton}
+                    onPress={() => handleSave(item.id)}
+                  >
+                    <Save size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => handleEdit(item.id)}
+                  >
+                    <Edit2 size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
+                )} */}
                 <TouchableOpacity
                   style={styles.deleteButton}
-                  onPress={() => handleDelete(index)}
+                  onPress={() => handleDelete(item.id)}
                 >
                   <Trash size={20} color="#FFFFFF" />
                 </TouchableOpacity>
@@ -206,6 +283,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
+  input: {
+    fontSize: 14,
+    textAlign: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+    width: "100%",
+    padding: 5,
+  },
   cardActions: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -213,6 +298,17 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: "#d9534f",
+    padding: 10,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  editButton: {
+    backgroundColor: "#5bc0de",
+    padding: 10,
+    borderRadius: 5,
+  },
+  saveButton: {
+    backgroundColor: "#5cb85c",
     padding: 10,
     borderRadius: 5,
   },
