@@ -5,39 +5,35 @@ import {
   StyleSheet,
   Switch,
   TouchableOpacity,
-  useColorScheme,
+  AsyncStorage,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Bell, Moon, Volume2Icon } from "lucide-react-native";
 
-const SettingsScreen = ({ navigation }) => {
+const SettingsScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [profile, setProfile] = useState({ username: "", email: "" });
 
   useEffect(() => {
-    const getDarkModeSetting = async () => {
-      const isDarkMode = await AsyncStorage.getItem("darkModeEnabled");
-      if (isDarkMode !== null) {
-        setDarkModeEnabled(JSON.parse(isDarkMode));
+    const fetchProfile = async () => {
+      const userProfile = await AsyncStorage.getItem("userProfile");
+      if (userProfile) {
+        setProfile(JSON.parse(userProfile));
       }
     };
 
-    getDarkModeSetting();
+    fetchProfile();
   }, []);
-
-  const toggleDarkMode = async () => {
-    const newDarkModeEnabled = !darkModeEnabled;
-    setDarkModeEnabled(newDarkModeEnabled);
-    await AsyncStorage.setItem(
-      "darkModeEnabled",
-      JSON.stringify(newDarkModeEnabled)
-    );
-  };
 
   const toggleNotifications = () => {
     setNotificationsEnabled((prevState) => !prevState);
     // Logic to update actual notification settings in your app
+  };
+
+  const toggleDarkMode = () => {
+    setDarkModeEnabled((prevState) => !prevState);
+    // Logic to apply dark mode to your app
   };
 
   const toggleSound = () => {
@@ -46,19 +42,17 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        darkModeEnabled ? styles.containerDark : styles.containerLight,
-      ]}
-    >
+    <View style={styles.container}>
+      {/* Profile */}
+      <View style={styles.profileSection}>
+        <Text style={styles.profileTitle}>Profile</Text>
+        <Text style={styles.profileText}>Username: {profile.username}</Text>
+        <Text style={styles.profileText}>Email: {profile.email}</Text>
+      </View>
+      <View style={styles.separator} />
+
       {/* Notifications */}
-      <View
-        style={[
-          styles.section,
-          darkModeEnabled ? styles.sectionDark : styles.sectionLight,
-        ]}
-      >
+      <View style={styles.section}>
         <Bell size={24} color="#4a90e2" style={styles.icon} />
         <Text style={styles.sectionTitle}>Notifications</Text>
         <Switch
@@ -73,12 +67,7 @@ const SettingsScreen = ({ navigation }) => {
       <View style={styles.separator} />
 
       {/* Appearance */}
-      <View
-        style={[
-          styles.section,
-          darkModeEnabled ? styles.sectionDark : styles.sectionLight,
-        ]}
-      >
+      <View style={styles.section}>
         <Moon size={24} color="#6e5494" style={styles.icon} />
         <Text style={styles.sectionTitle}>Appearance</Text>
         <Switch
@@ -93,12 +82,7 @@ const SettingsScreen = ({ navigation }) => {
       <View style={styles.separator} />
 
       {/* Sound */}
-      <View
-        style={[
-          styles.section,
-          darkModeEnabled ? styles.sectionDark : styles.sectionLight,
-        ]}
-      >
+      <View style={styles.section}>
         <Volume2Icon size={24} color="#55c42b" style={styles.icon} />
         <Text style={styles.sectionTitle}>Sound</Text>
         <Switch
@@ -114,11 +98,11 @@ const SettingsScreen = ({ navigation }) => {
 
       {/* Sign Out */}
       <TouchableOpacity
-        style={[
-          styles.button,
-          darkModeEnabled ? styles.buttonDark : styles.buttonLight,
-        ]}
-        onPress={() => {}}
+        style={styles.button}
+        onPress={async () => {
+          await AsyncStorage.removeItem("userProfile");
+          // Optionally navigate to login screen or reload the app
+        }}
       >
         <Text style={styles.buttonText}>Sign Out</Text>
       </TouchableOpacity>
@@ -132,12 +116,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 40,
     justifyContent: "center",
-  },
-  containerLight: {
     backgroundColor: "#fff",
   },
-  containerDark: {
-    backgroundColor: "#333",
+  profileSection: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  profileTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  profileText: {
+    fontSize: 16,
   },
   section: {
     flexDirection: "row",

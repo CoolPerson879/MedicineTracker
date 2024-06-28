@@ -1,119 +1,101 @@
-import React from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
-import { Formik } from "formik";
-import * as Yup from "yup";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useState } from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  TextInput,
+  ActivityIndicator,
+  Button,
+  KeyboardAvoidingView,
+} from "react-native";
+import { FIREBASE_AUTH } from "../FirebaseConfig";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
 
-const LoginSchema = Yup.object().shape({
-  firstName: Yup.string().required("First name is required"),
-  lastName: Yup.string().required("Last name is required"),
-  email: Yup.string().email("Invalid email").required("Email is required"),
-});
+const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const auth = FIREBASE_AUTH;
 
-const LoginScreen = ({ navigation }) => {
-  const handleLogin = async (values) => {
+  const signIn = async () => {
+    setLoading(true);
     try {
-      await AsyncStorage.setItem("userData", JSON.stringify(values));
-      navigation.navigate("Home");
+      const response = await signInWithEmailAndPassword(auth, email, password);
+      console.log(response);
+      alert("Check your email");
     } catch (error) {
-      console.error("Error saving user data", error);
+      console.log(error);
+      alert("Registration failed. Try again later. " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUp = async () => {
+    setLoading(true);
+    try {
+      const response = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      console.log(response);
+      alert("Check your email");
+    } catch (error) {
+      console.log(error);
+      alert("Registration failed. Try again later. " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Formik
-        initialValues={{ firstName: "", lastName: "", email: "" }}
-        validationSchema={LoginSchema}
-        onSubmit={(values) => handleLogin(values)}
-      >
-        {({
-          handleChange,
-          handleBlur,
-          handleSubmit,
-          values,
-          errors,
-          touched,
-        }) => (
-          <View style={styles.form}>
-            <Text style={styles.label}>First Name</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={handleChange("firstName")}
-              onBlur={handleBlur("firstName")}
-              value={values.firstName}
-            />
-            {touched.firstName && errors.firstName ? (
-              <Text style={styles.error}>{errors.firstName}</Text>
-            ) : null}
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        autoCapitalize="none"
+        value={email}
+        onChangeText={(text) => setEmail(text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        autoCapitalize="none"
+        value={password}
+        secureTextEntry={true}
+        onChangeText={(text) => setPassword(text)}
+      />
 
-            <Text style={styles.label}>Last Name</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={handleChange("lastName")}
-              onBlur={handleBlur("lastName")}
-              value={values.lastName}
-            />
-            {touched.lastName && errors.lastName ? (
-              <Text style={styles.error}>{errors.lastName}</Text>
-            ) : null}
-
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={handleChange("email")}
-              onBlur={handleBlur("email")}
-              value={values.email}
-              keyboardType="email-address"
-            />
-            {touched.email && errors.email ? (
-              <Text style={styles.error}>{errors.email}</Text>
-            ) : null}
-
-            <Button onPress={handleSubmit} title="Submit" />
-          </View>
-        )}
-      </Formik>
-    </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="0000ff" />
+      ) : (
+        <>
+          <Button title="Login" onPress={signIn} />
+          <Button title="Create Account" onPress={signUp} />
+        </>
+      )}
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    marginHorizontal: 20,
     flex: 1,
     justifyContent: "center",
-    padding: 16,
-    backgroundColor: "#f0f0f0",
-  },
-  form: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
   },
   input: {
+    marginVertical: 4,
+    height: 50,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
+    borderRadius: 4,
     padding: 10,
-    marginBottom: 10,
-  },
-  error: {
-    color: "red",
-    marginBottom: 10,
+    backgroundColor: "white",
   },
 });
 
-export default LoginScreen;
+export default Login;

@@ -81,6 +81,7 @@ const FormScreen = ({ navigation }) => {
             extrafieldtwo: "",
             extrafieldthree: "",
             extrafieldfour: "",
+            location: "",
           }}
           validationSchema={FormSchema}
           onSubmit={handleSubmit}

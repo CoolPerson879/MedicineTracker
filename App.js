@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import {
   Home,
@@ -14,6 +15,12 @@ import FormScreen from "./components/FormScreen";
 import DataScreen from "./components/DataScreen";
 import GraphScreen from "./components/GraphScreen";
 import SettingsScreen from "./components/SettingsScreen";
+import Login from "./components/Login";
+import { onAuthStateChanged } from "firebase/auth";
+import { FIREBASE_AUTH } from "./FirebaseConfig";
+
+const Stack = createNativeStackNavigator();
+const InsideStack = createNativeStackNavigator();
 
 const Tab = createBottomTabNavigator();
 
@@ -42,157 +49,36 @@ const CustomTabBarButton = ({ children, onPress }) => (
   </TouchableOpacity>
 );
 
+function InsideLayout() {
+  return (
+    <InsideStack.Navigator>
+      <InsideStack.Screen name="temp" component={DataScreen} />
+      <InsideStack.Screen name="form" component={FormScreen} />
+    </InsideStack.Navigator>
+  );
+}
+
 const App = () => {
+  const [user, setUser] = useState();
+
+  useEffect(() => {
+    onAuthStateChanged(FIREBASE_AUTH, (user) => {
+      console.log("user", user);
+      setUser(user);
+    });
+  }, []);
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        initialRouteName="Home"
-        screenOptions={{
-          headerShown: false,
-          tabBarShowLabel: false,
-          tabBarStyle: {
-            position: "absolute",
-            bottom: 25,
-            left: 20,
-            right: 20,
-            backgroundColor: "#ffffff",
-            borderRadius: 25,
-            height: 85,
-            ...styles.shadow,
-          },
-        }}
+      <Stack.Navigator
+        // @ts-ignore
+        initialRouteName={Login}
       >
-        <Tab.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={{ alignItems: "center", justifyContent: "center" }}>
-                <Home
-                  style={{
-                    width: 20,
-                    height: 20,
-                    color: focused ? "#7F5DF0" : "#000000",
-                  }}
-                />
-                <Text
-                  style={{
-                    color: focused ? "#7F5DF0" : "#000000",
-                    fontSize: 12,
-                    marginTop: 2,
-                  }}
-                >
-                  Home
-                </Text>
-              </View>
-            ),
-          }}
+        <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{ headerShown: true }}
         />
-
-        <Tab.Screen
-          name="Form"
-          component={FormScreen}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <Plus
-                style={{
-                  width: 25,
-                  height: 25,
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: [{ translateX: -12.5 }, { translateY: -12.5 }],
-                  color: focused ? "#7F5DF0" : "#000000",
-                }}
-              />
-            ),
-            tabBarButton: (props) => (
-              <CustomTabBarButton {...props}>
-                <Plus size={40} color="white" />
-              </CustomTabBarButton>
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Data"
-          component={DataScreen}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={{ alignItems: "center", justifyContent: "center" }}>
-                <FileText
-                  style={{
-                    width: 20,
-                    height: 20,
-                    color: focused ? "#7F5DF0" : "#000000",
-                  }}
-                />
-                <Text
-                  style={{
-                    color: focused ? "#7F5DF0" : "#000000",
-                    fontSize: 12,
-                    marginTop: 2,
-                  }}
-                  numberOfLines={1}
-                >
-                  View Data
-                </Text>
-              </View>
-            ),
-          }}
-        />
-        {/* <Tab.Screen
-          name="Analytics"
-          component={GraphScreen}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={{ alignItems: "center", justifyContent: "center" }}>
-                <AreaChart
-                  style={{
-                    width: 20,
-                    height: 20,
-                    color: focused ? "#7F5DF0" : "#000000",
-                  }}
-                />
-                <Text
-                  style={{
-                    color: focused ? "#7F5DF0" : "#000000",
-                    fontSize: 12,
-                    marginTop: 2,
-                  }}
-                >
-                  Analytics
-                </Text>
-              </View>
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={{ alignItems: "center", justifyContent: "center" }}>
-                <SettingsIcon
-                  style={{
-                    width: 20,
-                    height: 20,
-                    color: focused ? "#7F5DF0" : "#000000",
-                  }}
-                />
-                <Text
-                  style={{
-                    color: focused ? "#7F5DF0" : "#000000",
-                    fontSize: 12,
-                    marginTop: 2,
-                  }}
-                >
-                  Settings
-                </Text>
-              </View>
-            ),
-          }}
-        /> */}
-      </Tab.Navigator>
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };
@@ -211,3 +97,160 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+
+/* <Tab.Navigator
+          initialRouteName="Home"
+          screenOptions={{
+            headerShown: false,
+            tabBarShowLabel: false,
+            tabBarStyle: {
+              position: "absolute",
+              bottom: 25,
+              left: 20,
+              right: 20,
+              backgroundColor: "#ffffff",
+              borderRadius: 25,
+              height: 85,
+              ...styles.shadow,
+            },
+          }}
+        >
+          <Tab.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <View
+                  style={{ alignItems: "center", justifyContent: "center" }}
+                >
+                  <Home
+                    style={{
+                      width: 20,
+                      height: 20,
+                      color: focused ? "#7F5DF0" : "#000000",
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: focused ? "#7F5DF0" : "#000000",
+                      fontSize: 12,
+                      marginTop: 2,
+                    }}
+                  >
+                    Home
+                  </Text>
+                </View>
+              ),
+            }}
+          />
+
+          <Tab.Screen
+            name="Form"
+            component={FormScreen}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <Plus
+                  style={{
+                    width: 25,
+                    height: 25,
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: [{ translateX: -12.5 }, { translateY: -12.5 }],
+                    color: focused ? "#7F5DF0" : "#000000",
+                  }}
+                />
+              ),
+              tabBarButton: (props) => (
+                <CustomTabBarButton {...props}>
+                  <Plus size={40} color="white" />
+                </CustomTabBarButton>
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Data"
+            component={DataScreen}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <View
+                  style={{ alignItems: "center", justifyContent: "center" }}
+                >
+                  <FileText
+                    style={{
+                      width: 20,
+                      height: 20,
+                      color: focused ? "#7F5DF0" : "#000000",
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: focused ? "#7F5DF0" : "#000000",
+                      fontSize: 12,
+                      marginTop: 2,
+                    }}
+                    numberOfLines={1}
+                  >
+                    View Data
+                  </Text>
+                </View>
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Analytics"
+            component={GraphScreen}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <View
+                  style={{ alignItems: "center", justifyContent: "center" }}
+                >
+                  <AreaChart
+                    style={{
+                      width: 20,
+                      height: 20,
+                      color: focused ? "#7F5DF0" : "#000000",
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: focused ? "#7F5DF0" : "#000000",
+                      fontSize: 12,
+                      marginTop: 2,
+                    }}
+                  >
+                    Analytics
+                  </Text>
+                </View>
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <View
+                  style={{ alignItems: "center", justifyContent: "center" }}
+                >
+                  <SettingsIcon
+                    style={{
+                      width: 20,
+                      height: 20,
+                      color: focused ? "#7F5DF0" : "#000000",
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: focused ? "#7F5DF0" : "#000000",
+                      fontSize: 12,
+                      marginTop: 2,
+                    }}
+                  >
+                    Settings
+                  </Text>
+                </View>
+              ),
+            }}
+          />
+        </Tab.Navigator> */
